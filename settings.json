@@ -1,0 +1,94 @@
+{
+  "server": { "host": "halalsmp.mcsh.io", "port": 25565, "version": false },
+
+  "accounts": [
+    { "id": "main", "username": "murgibot", "password": "ENV:BOT_PASSWORD", "type": "offline", "enabled": true, "autoStart": true }
+  ],
+
+  "dashboard": {
+    "enabled": true,
+    "port": 3000,
+    "password": "ENV:DASHBOARD_PASSWORD",
+    "sessionSecret": "ENV:SESSION_SECRET"
+  },
+
+  "auto_auth": {
+    "enabled": true,
+    "password": "ENV:BOT_AUTH_PASSWORD",
+    "register_command": "/register {password} {password}",
+    "login_command": "/login {password}"
+  },
+  "anti_afk": { "enabled": true, "interval_sec": 25, "actions": ["jump", "look", "walk", "sneak", "swing"] },
+  "chat_messages": {
+    "enabled": false,
+    "interval_sec": 600,
+    "messages": ["Still here!", "AFK but alive :)"]
+  },
+  "reconnect": { "enabled": true, "delay_sec": 10, "max_delay_sec": 300, "backoff": true },
+  "memory_monitor": { "enabled": true, "interval_sec": 60, "warn_mb": 400, "limit_mb": 480, "action": "restart_bots" },
+  "crash_recovery": { "enabled": true },
+  "keepalive": { "enabled": true, "interval_min": 10, "url": "ENV:RENDER_EXTERNAL_URL" },
+  "restore_position": false,
+  "backup": { "enabled": true, "interval_min": 5, "keep": 200, "try_tp": false },
+  "leave_rejoin": { "enabled": false, "stay_min": 120, "away_sec": 60 },
+
+  "combat": {
+    "enabled": true,
+    "auto_attack_mobs": true,
+    "pvp_mode": false,
+    "ignore_players": [],
+    "ignore_mobs": ["enderman", "zombified_piglin"],
+    "eat_golden_apple_below": 6,
+    "flee_below": 4,
+    "flee_distance": 20,
+    "attack_range": 3.2
+  },
+
+  "ai": {
+    "enabled": true,
+    "primary": "gemini",
+    "fallbacks": ["groq", "openai"],
+    "personality": "friendly, playful, uses a bit of Bangla + English mix, keeps answers under 200 chars",
+    "system_prompt": "You are an AFK Minecraft bot player named {name}. Respond concisely to in-game chat.",
+    "gemini": { "apiKey": "ENV:GEMINI_API_KEY", "model": "gemini-2.5-flash" },
+    "groq": { "apiKey": "ENV:GROQ_API_KEY", "model": "llama-3.1-8b-instant" },
+    "openai": { "apiKey": "ENV:OPENAI_API_KEY", "model": "gpt-4o-mini" }
+  },
+  "ai_chat": { "enabled": true, "per_player_cooldown_sec": 10, "global_per_minute": 20, "memory_messages": 10 },
+  "ai_brain": { "enabled": false, "tick_interval": 30, "max_requests_per_hour": 100 },
+
+  "discord": {
+    "enabled": true,
+    "botToken": "ENV:DISCORD_BOT_TOKEN",
+    "guildId": "ENV:DISCORD_GUILD_ID",
+    "allowedChannels": [],
+    "adminRoles": [],
+    "prefix": "!",
+    "webhook_url": "ENV:DISCORD_WEBHOOK_URL",
+    "notify_channelId": "",
+    "notify_events": ["connect", "disconnect", "kick", "crash", "low_health", "death", "anti_kick", "brain", "update", "watch_alert", "task"],
+    "chat_bridge": { "enabled": false, "channelId": "ENV:DISCORD_BRIDGE_CHANNEL_ID", "account": "main", "forward_ai": true },
+    "tts_alerts": { "enabled": false, "events": ["kick", "crash", "disconnect", "low_health"] }
+  },
+
+  "modules": {
+    "auto_mine": { "enabled": false, "targets": ["iron_ore", "diamond_ore", "coal_ore"], "radius": 32, "max_targets_per_cycle": 5, "require_tool": true },
+    "auto_farm": { "enabled": false, "radius": 16, "crops": ["wheat", "carrots", "potatoes", "beetroots"] },
+    "auto_fish": { "enabled": false },
+    "auto_chop": { "enabled": false, "radius": 32, "tree_types": ["oak", "birch", "spruce"] },
+    "auto_trade": { "enabled": false, "item_wanted": "emerald", "item_give": "wheat" },
+    "auto_build": { "enabled": false, "schematic_path": null }
+  },
+
+  "tracker": { "enabled": true, "notify_join_leave": false, "watch_list": [], "ops": [] },
+
+  "tasks": [
+    { "cron": "0 0 * * *", "action": "cmd", "params": { "command": "/home" }, "label": "midnight-home", "enabled": false },
+    { "delay_sec": 3600, "repeat": true, "action": "walk_to", "params": { "x": 100, "y": 64, "z": 200 }, "label": "hourly-walk", "enabled": false }
+  ],
+
+  "proxy": { "enabled": false, "list": [], "rotate_on_kick": true, "rotate_on_reconnect": true },
+  "auto_update": { "enabled": false, "repo": "user/repo", "branch": "main", "check_interval_min": 30, "auto_apply": true },
+  "anti_kick": { "enabled": true, "threshold": 3, "window_min": 5, "mute_min": 10, "spam_mute_min": 15 },
+  "plugins": { "enabled": true, "disabled": [] }
+}

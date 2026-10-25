@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: minecraft-afk-bot
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    # Free plan: no persistent disk and the service sleeps after 15 min idle (keep-alive pings /ping).
+    # Paid plan: add   disk: { name: data, mountPath: /app/data, sizeGB: 1 }   to keep SQLite data.
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DASHBOARD_PASSWORD
+        sync: false
+      - key: MC_HOST
+        sync: false
+      - key: MC_PORT
+        value: "25565"
+      - key: MC_VERSION
+        sync: false
+      - key: BOT_USERNAME
+        sync: false
+      - key: BOT_AUTH_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: DISCORD_GUILD_ID
+        sync: false
+      - key: DISCORD_BRIDGE_CHANNEL_ID
+        sync: false
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
