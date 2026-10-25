@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15191f">
+<title>AFK Bot dashboard</title>
+<link rel="manifest" href="/manifest.json"><link rel="icon" href="/icon.svg"><link rel="apple-touch-icon" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link rel="stylesheet" href="/css/app.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'dark'}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="cube"></span><span class="hide-sm">AFK Bot</span></div>
+  <select id="acctSel" style="width:auto;max-width:42vw" aria-label="Bot account"></select>
+  <button class="btn sm" id="profileBtn" type="button">Profiles +</button>
+  <button class="btn sm" id="diagnosticsBtn" type="button">Diagnostics</button>
+  <span class="badge" id="statusBadge"><span class="dot"></span><span id="statusText">offline</span></span>
+  <span class="badge hide-sm mono" id="uptimeBadge" title="Uptime">-</span>
+  <span id="connBadge" class="badge hide-sm" title="Live connection">connecting…</span>
+  <span style="flex:1"></span>
+  <a class="btn sm hide-sm" href="/logs">Terminal</a>
+  <a class="btn sm hide-sm" href="/setup">Setup guide</a>
+  <button class="btn sm" id="themeBtn">Theme</button>
+  <button class="btn sm" id="logoutBtn">Log out</button>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="Sections">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="chat">Chat</button>
+    <button data-tab="inventory">Inventory</button>
+    <button data-tab="map">Map</button>
+    <button data-tab="control">Control</button>
+    <button data-tab="friends">Friends / Co-op</button>
+    <button data-tab="automation">Automation</button>
+    <button data-tab="tasks">Tasks</button>
+    <button data-tab="ai">AI</button>
+    <button data-tab="analytics">Analytics</button>
+  </nav>
+
+  <main class="main">
+    <!-- OVERVIEW -->
+    <section class="tab active" id="tab-overview">
+      <div class="grid2">
+        <div class="card">
+          <h2>Position</h2>
+          <div class="coords" id="coords">- , - , -</div>
+          <div class="muted mono" id="dimension" style="font-size:12px;margin-bottom:10px"></div>
+          <div class="stat"><span class="muted">Server</span><span class="mono" id="sServer">-</span></div>
+          <div class="stat"><span class="muted">Version</span><span class="mono" id="sVersion">-</span></div>
+          <div class="stat"><span class="muted">Current task</span><span class="mono" id="sTask">idle</span></div>
+          <div class="stat"><span class="muted">Reconnects</span><span class="mono" id="sReconnects">0</span></div>
+          <div class="stat"><span class="muted">Proxy</span><span class="mono" id="sProxy">none</span></div>
+          <div class="stat"><span class="muted">Last error</span><span id="sError" style="text-align:right;max-width:60%;word-break:break-word">-</span></div>
+        </div>
+        <div class="card">
+          <h2>Vitals</h2>
+          <label>Health <span class="mono" id="hpNum"></span></label><div class="seg hp" id="hpSeg"></div>
+          <label>Hunger <span class="mono" id="foodNum"></span></label><div class="seg food" id="foodSeg"></div>
+          <h2 style="margin-top:14px">Quick actions</h2>
+          <div class="flex flex-wrap gap-2">
+            <button class="btn primary" id="btnStart">Start</button>
+            <button class="btn danger" id="btnStop">Stop</button>
+            <button class="btn" id="btnRestart">Restart</button>
+            <button class="btn" id="btnBrain">AI brain: off</button>
+            <button class="btn" id="btnIdle">Stop activity</button>
+          </div>
+          <div class="flex flex-wrap gap-2" style="margin-top:8px">
+            <button class="btn sm" id="btnStartAll">Start all</button>
+            <button class="btn sm" id="btnStopAll">Stop all</button>
+            <button class="btn sm" id="btnNotify">Enable alerts</button>
+          </div>
+          <div class="flex flex-wrap gap-2" id="activityBtns" style="margin-top:10px"></div>
+        </div>
+        <div class="card">
+          <h2>Players online <span id="pCount" class="mono"></span></h2>
+          <ul class="plist" id="plist"><li class="muted">Nobody yet.</li></ul>
+        </div>
+        <div class="card">
+          <h2>Recent log</h2>
+          <div class="feed mono" id="miniLog" style="height:220px;font-size:12px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAT -->
+    <section class="tab" id="tab-chat">
+      <div class="card">
+        <h2>Live chat <span class="muted" style="font-weight:400">Minecraft and Discord</span></h2>
+        <div class="feed" id="chatFeed"></div>
+        <div class="flex gap-2" style="margin-top:10px">
+          <input id="chatInput" placeholder="Send a message or /command as the bot" maxlength="256" autocomplete="off">
+          <button class="btn primary" id="chatSend">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVENTORY -->
+    <section class="tab" id="tab-inventory">
+      <div class="card">
+        <h2>Inventory</h2>
+        <div class="inv" id="invMain"></div>
+        <div class="hotbar"><label>Hotbar</label><div class="inv" id="invHot"></div></div>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section class="tab" id="tab-map">
+      <div class="card">
+        <h2>Top-down map <span class="muted" style="font-weight:400">tap to send the bot there</span></h2>
+        <canvas id="mapCanvas" width="640" height="640" aria-label="Map"></canvas>
+        <div class="flex items-center gap-3 flex-wrap" style="margin-top:10px;font-size:13px">
+          <label style="margin:0">Zoom</label><input type="range" id="zoom" min="3" max="16" value="8" style="width:140px">
+          <span><span class="dot" style="background:#5b86ff"></span>bot</span>
+          <span><span class="dot" style="background:var(--ok)"></span>players</span>
+          <span><span class="dot" style="background:var(--bad)"></span>hostile</span>
+          <span><span class="dot" style="background:var(--warn)"></span>other mobs</span>
+          <span id="moveStatus" class="mono muted"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTROL (v3.1): content is built by /js/extras.js; every control calls a real /api endpoint -->
+    <section class="tab" id="tab-control"><div id="controlMount" class="grid2"></div></section>
+
+    <!-- FRIEND / CO-OP -->
+    <section class="tab" id="tab-friends">
+      <div class="grid2">
+        <div class="card">
+          <h2>Co-op Survival Friend</h2>
+          <p class="muted" style="margin-bottom:10px">Choose a player. When no task is active, the bot follows them. Queued activities temporarily take over navigation and following resumes afterwards.</p>
+          <div><label for="friendName">Friend username</label><input id="friendName" maxlength="16" placeholder="Minecraft username" autocomplete="off"></div>
+          <div class="xrow"><div><label for="friendDistance">Follow distance</label><input id="friendDistance" type="number" min="2" max="8" value="3"></div><div><label for="friendOnline">Online players</label><select id="friendOnline"><option value="">Loading players…</option></select></div></div>
+          <div class="flex flex-wrap gap-2" style="margin-top:10px"><button class="btn primary" id="friendStart">Save & start co-op</button><button class="btn" id="friendStop">Stop co-op</button><button class="btn" id="friendRefresh">Refresh</button></div>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:12px"><input type="checkbox" id="friendAutoTasks" style="width:auto" checked> Auto-queue survival activities while near friend</label>
+          <div class="xmsg info" id="friendStatus" style="margin-top:10px">No friend selected.</div>
+        </div>
+        <div class="card">
+          <h2>Priority Task Queue</h2>
+          <p class="muted" style="margin-bottom:10px">Queued tasks run one at a time. Each task has a maximum duration, then the next task can start.</p>
+          <div class="xrow"><div><label for="queueName">Activity</label><select id="queueName"><option value="mine">Mining</option><option value="farm">Farming</option><option value="chop">Tree chopping</option><option value="fish">Fishing</option><option value="trade">Trading</option><option value="grind">Resource grinding</option><option value="house">House building</option><option value="build">Blueprint building</option><option value="move">Move to coordinates</option><option value="follow">Follow player</option><option value="branchmine">Branch mining</option><option value="loot">Loot collection</option><option value="smelt">Smelting</option><option value="store">Chest storage</option><option value="explore">Explore</option><option value="base">Base setup</option><option value="boss">Boss mode</option><option value="guard">Base guard</option></select></div>
+          <div><label for="queuePriority">Priority (-100 to 100)</label><input id="queuePriority" type="number" min="-100" max="100" value="0"></div><div><label for="queueDuration">Max seconds</label><input id="queueDuration" type="number" min="10" max="3600" value="180"></div></div>
+          <div><label for="queueParams">Activity parameters (JSON)</label><textarea id="queueParams" rows="3" class="mono">{}</textarea></div>
+          <div class="flex gap-2" style="margin-top:10px"><button class="btn primary" id="queueAdd">Add task</button><button class="btn danger" id="queueClear">Clear queue</button><button class="btn" id="queueRefresh">Refresh</button></div>
+          <div id="queueStatus" class="xmsg info" style="margin-top:10px">Queue not loaded.</div>
+          <div id="queueItems" style="margin-top:10px;display:grid;gap:8px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADVANCED AUTOMATION -->
+    <section class="tab" id="tab-automation">
+      <div class="grid2">
+        <div class="card" style="grid-column:1/-1">
+          <h2>Advanced Survival Automation</h2>
+          <p class="muted" style="margin-bottom:12px">Run one task at a time. Server permissions, available tools/materials, loaded chunks and terrain can limit results. Tasks stop on safety checks instead of claiming success.</p>
+          <div class="flex flex-wrap gap-2">
+            <button class="btn primary" data-automation="branchmine">Branch mine</button>
+            <button class="btn" data-automation="loot">Collect nearby loot</button>
+            <button class="btn" data-automation="smelt">Load nearby furnace</button>
+            <button class="btn" data-automation="store">Store spare items</button>
+            <button class="btn" data-automation="explore">Explore nearby</button>
+            <button class="btn" data-automation="base">Build survival base</button>
+            <button class="btn" data-automation="boss">Boss mode</button>
+            <button class="btn" data-automation="guard">Guard current area</button>
+            <button class="btn danger" id="automationStop">Stop current activity</button>
+          </div>
+          <div class="xmsg info" id="automationStatus" style="margin-top:12px">Choose a task to start.</div>
+        </div>
+        <div class="card">
+          <h2>Task settings</h2>
+          <div class="xrow"><div><label for="branchLength">Branch tunnel length</label><input id="branchLength" type="number" min="4" max="48" value="16"></div><div><label for="branchAxis">Direction</label><select id="branchAxis"><option value="x">X axis</option><option value="z">Z axis</option></select></div></div>
+          <div class="xrow"><div><label for="exploreSteps">Explore steps</label><input id="exploreSteps" type="number" min="1" max="12" value="4"></div><div><label for="exploreRadius">Explore radius</label><input id="exploreRadius" type="number" min="8" max="48" value="24"></div></div>
+          <div class="xrow"><div><label for="guardRadius">Guard radius</label><input id="guardRadius" type="number" min="4" max="32" value="8"></div><div><label for="guardDuration">Guard duration (seconds)</label><input id="guardDuration" type="number" min="10" max="1800" value="300"></div></div>
+          <div><label for="baseSize">Base size</label><input id="baseSize" type="number" min="4" max="7" value="5"></div>
+        </div>
+        <div class="card">
+          <h2>World Memory & Waypoints</h2>
+          <div class="xrow"><div><label for="waypointName">Waypoint name</label><input id="waypointName" maxlength="32" value="home"></div><div><label for="waypointX">X</label><input id="waypointX" type="number" step="1"></div></div>
+          <div class="xrow"><div><label for="waypointY">Y (optional)</label><input id="waypointY" type="number" step="1"></div><div><label for="waypointZ">Z</label><input id="waypointZ" type="number" step="1"></div></div>
+          <div class="flex flex-wrap gap-2" style="margin-top:10px"><button class="btn primary" id="waypointSave">Save waypoint</button><button class="btn" id="memoryRefresh">Refresh memory</button><button class="btn danger" id="memoryClear">Clear memory</button></div>
+          <div id="memoryView" class="feed mono" style="margin-top:10px;max-height:240px;font-size:12px">World memory not loaded.</div>
+          <h3 style="margin-top:14px">Configuration backups</h3>
+          <div class="flex flex-wrap gap-2"><button class="btn" id="configBackupNow">Create settings backup</button><button class="btn" id="configBackupRefresh">Refresh backups</button></div>
+          <div id="configBackupList" class="feed mono" style="margin-top:8px;max-height:120px;font-size:12px">Backups not loaded.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="tab" id="tab-tasks">
+      <div class="grid2">
+        <div class="card" style="grid-column:1/-1;overflow-x:auto">
+          <h2>Scheduled tasks</h2>
+          <table><thead><tr><th>On</th><th>Label</th><th>When</th><th>Action</th><th>Last run</th><th></th></tr></thead><tbody id="taskRows"></tbody></table>
+        </div>
+        <form class="card" id="taskForm" style="display:grid;gap:10px">
+          <h2>Add a task</h2>
+          <div><label for="tLabel">Label</label><input id="tLabel" required maxlength="40" placeholder="midnight-home"></div>
+          <div class="flex gap-2">
+            <div style="flex:1"><label for="tKind">Schedule</label><select id="tKind"><option value="cron">Cron</option><option value="delay">Every N seconds</option></select></div>
+            <div style="flex:1"><label for="tWhen" id="tWhenLabel">Cron expression</label><input id="tWhen" required placeholder="0 0 * * *"></div>
+          </div>
+          <div class="flex gap-2">
+            <div style="flex:1"><label for="tAction">Action</label>
+              <select id="tAction"><option>cmd</option><option>say</option><option>walk_to</option><option>mine</option><option>farm</option><option>fish</option><option>chop</option><option>branchmine</option><option>smelt</option><option>store</option><option>explore</option><option>base</option><option>boss</option><option>guard</option><option>idle</option><option>stop_brain</option><option>start_brain</option></select></div>
+            <div style="flex:1"><label for="tAcct">Account</label><select id="tAcct"></select></div>
+          </div>
+          <div><label for="tParams">Params (JSON)</label><textarea id="tParams" rows="2" class="mono">{"command":"/home"}</textarea></div>
+          <button class="btn primary" type="submit">Add task</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- AI -->
+    <section class="tab" id="tab-ai">
+      <div class="grid2">
+        <div class="card">
+          <h2>AI status</h2>
+          <div class="stat"><span class="muted">Providers</span><span class="mono" id="aiProv">-</span></div>
+          <div class="stat"><span class="muted">Requests (1h / 24h)</span><span class="mono" id="aiReq">-</span></div>
+          <div class="stat"><span class="muted">Tokens (1h / 24h)</span><span class="mono" id="aiTok">-</span></div>
+          <div class="stat"><span class="muted">Brain</span><span class="mono" id="aiBrain">off</span></div>
+          <button class="btn" id="aiBrainBtn" style="margin-top:10px">Toggle brain</button>
+        </div>
+        <div class="card" style="display:grid;gap:10px">
+          <h2>Personality</h2>
+          <div><label for="preset">Preset</label><select id="preset"><option value="">Custom</option></select></div>
+          <textarea id="persona" rows="3"></textarea>
+          <button class="btn primary" id="personaSave">Save personality</button>
+        </div>
+        <div class="card" style="grid-column:1/-1">
+          <h2>Ask the AI</h2>
+          <div class="flex gap-2"><input id="aiQ" placeholder="Ask something…" autocomplete="off"><button class="btn primary" id="aiAsk">Ask</button></div>
+          <div id="aiAnswer" class="muted" style="margin-top:10px"></div>
+        </div>
+        <div class="card" style="grid-column:1/-1">
+          <h2>Last 50 requests</h2>
+          <div id="aiLog"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="tab" id="tab-analytics"><div id="analyticsMount"></div></section>
+  </main>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/socket.js"></script>
+<script src="/js/profile-manager.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/extras.js"></script>
+<script src="/js/friend.js"></script>
+<script src="/js/automation.js"></script>
+</body>
+</html>

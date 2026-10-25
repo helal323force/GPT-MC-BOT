@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15191f">
+<title>Setup guide - AFK Bot</title>
+<link rel="manifest" href="/manifest.json"><link rel="icon" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'dark'}catch(e){}</script>
+<style>.doc{max-width:760px;margin:0 auto;padding:16px 16px 60px}.doc h1{font-size:24px}.doc h2{font-size:17px;margin:28px 0 8px;color:var(--text)}.doc p,.doc li{max-width:68ch}.doc code{font-family:var(--mono);font-size:13px;background:var(--panel2);padding:1px 5px;border-radius:4px}.doc pre{background:var(--panel2);padding:12px;border-radius:8px;overflow-x:auto;font-family:var(--mono);font-size:13px}</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="cube"></span><span>Setup guide</span></div>
+  <span style="flex:1"></span>
+  <a class="btn sm" href="/">Dashboard</a>
+  <button class="btn sm" id="themeBtn">Theme</button>
+  <button class="btn sm" id="logoutBtn">Log out</button>
+</header>
+<article class="doc">
+  <h1>Get your bot running</h1>
+  <p class="muted">Use bots only on servers you own or where the rules allow AFK bots.</p>
+
+  <h2>1. Point the bot at your server</h2>
+  <p>Set <code>MC_HOST</code>, <code>MC_PORT</code> and <code>BOT_USERNAME</code> as environment variables, or edit <code>settings.json</code> (<code>server</code> and <code>accounts</code>). Cracked servers use type <code>offline</code>; premium servers use <code>microsoft</code> and print a device code in the terminal on first login.</p>
+  <h2>2. Secure the dashboard</h2>
+  <p>Set <code>DASHBOARD_PASSWORD</code> and <code>SESSION_SECRET</code>. Without them the dev password <code>admin123</code> is used.</p>
+  <h2>3. Switch on AI (optional)</h2>
+  <p>Add at least one of <code>GEMINI_API_KEY</code>, <code>GROQ_API_KEY</code>, <code>OPENAI_API_KEY</code>. In game, type <code>.ai what is a creeper?</code>. Enable the autonomous brain with <code>ai_brain.enabled</code> or the AI tab.</p>
+  <h2>4. Connect Discord (optional)</h2>
+  <p>Create a bot in the Discord developer portal, enable <b>Message Content Intent</b>, invite it with the <code>bot</code> and <code>applications.commands</code> scopes, then set <code>DISCORD_BOT_TOKEN</code>, <code>DISCORD_GUILD_ID</code> and (for the chat bridge) <code>DISCORD_BRIDGE_CHANNEL_ID</code>. Add role names or ids to <code>discord.adminRoles</code>.</p>
+  <h2>5. Pick where it runs</h2>
+  <ul>
+    <li><b>Railway:</b> deploy the GitHub repo, add the variables, attach a volume at <code>/app/data</code>.</li>
+    <li><b>Render:</b> New Blueprint from the repo (uses <code>render.yaml</code>). The free plan sleeps; the built-in keep-alive pings <code>/ping</code>.</li>
+    <li><b>GitHub Actions:</b> headless; add secrets, run the <i>Run Bot</i> workflow, control it from Discord.</li>
+  </ul>
+  <p>Full instructions, config keys and the test checklist are in <code>README-v3.md</code>.</p>
+  <h2>Chat commands in game</h2>
+  <pre>.ai &lt;question&gt;      ask the AI (anywhere in a message)
+.ai                 show usage</pre>
+  <h2>Discord commands</h2>
+  <pre>!start [acct]  !stop [acct]  !status  !pos  !players
+!say [@acct] msg   !cmd [@acct] /command   !ai [@acct] question
+!brain on|off   !logs [n]</pre>
+</article>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/socket.js"></script>
+<script>
+  document.getElementById('themeBtn').onclick=()=>{const r=document.documentElement,n=r.dataset.theme==='light'?'dark':'light';r.dataset.theme=n;localStorage.setItem('theme',n)};
+  document.getElementById('logoutBtn').onclick=async()=>{await fetch('/logout',{method:'POST',headers:{Accept:'application/json'}});location.href='/login'};
+</script>
+</body>
+</html>

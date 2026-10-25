@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15191f">
+<title>Sign in - AFK Bot</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'dark'}catch(e){}</script>
+</head>
+<body style="display:grid;place-items:center;min-height:100vh;padding:16px">
+<form class="card" method="post" action="/auth" style="width:100%;max-width:360px;display:grid;gap:14px">
+  <div class="brand" style="font-size:18px"><span class="cube"></span>AFK Bot control</div>
+  <p class="muted" style="margin:0">Enter the dashboard password to manage your bots.</p>
+  <div id="err" class="toast error" style="display:none">Wrong password. Try again.</div>
+  <div><label for="pw">Password</label><input id="pw" name="password" type="password" autocomplete="current-password" required autofocus></div>
+  <button class="btn primary" type="submit">Sign in</button>
+</form>
+<script>if(new URLSearchParams(location.search).has('error'))document.getElementById('err').style.display='block'</script>
+</body>
+</html>

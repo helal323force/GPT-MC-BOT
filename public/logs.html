@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15191f">
+<title>Terminal - AFK Bot</title>
+<link rel="manifest" href="/manifest.json"><link rel="icon" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+<link rel="stylesheet" href="/css/app.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'dark'}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="cube"></span><span>Terminal</span></div>
+  <select id="acctSel" style="width:auto"></select>
+  <span class="badge" id="statusBadge"><span class="dot"></span><span id="statusText">offline</span></span>
+  <span class="badge hide-sm mono" id="uptimeBadge">-</span>
+  <span style="flex:1"></span>
+  <a class="btn sm" href="/">Dashboard</a>
+  <button class="btn sm" id="themeBtn">Theme</button>
+  <button class="btn sm" id="logoutBtn">Log out</button>
+</header>
+<div class="termwrap">
+  <div id="term"></div>
+  <div class="cmdline"><span>&gt;</span><input id="cmd" placeholder="Chat message or /command - Enter to send, ↑ for history, 'clear' to wipe" autocomplete="off"><button class="btn primary" id="sendBtn">Send</button></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/socket.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+<script>Bot.initHeader();</script>
+<script src="/js/terminal.js"></script>
+</body>
+</html>
