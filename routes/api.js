@@ -25,11 +25,16 @@ function apiRoutes() {
   // ----- persistent dashboard profiles -----
   r.get("/api/profiles", wrap((_req, res) => {
     const profiles = database.kvGet("dynamic_profiles", []);
-    res.json({ profiles: (Array.isArray(profiles) ? profiles : []).map((p) => ({ id: p.id, username: p.username, type: p.type || "offline", autoStart: !!p.autoStart })) });
+    res.json({ profiles: (Array.isArray(profiles) ? profiles : []).map((p) => ({ id: p.id, username: p.username, type: p.type || "offline", host: p.host || config.server.host, port: Number(p.port) || Number(config.server.port) || 25565, version: p.version || config.server.version || "auto", autoStart: !!p.autoStart, autoAuth: !!p.autoAuth?.enabled })) });
   }));
   r.post("/api/profiles", wrap(async (req, res) => {
     const username = String(req.body?.username || "").trim();
     const type = String(req.body?.type || "offline").toLowerCase();
+    const host = String(req.body?.host || config.server.host || "").trim();
+    const port = Number(req.body?.port || config.server.port || 25565);
+    const version = String(req.body?.version || config.server.version || "auto").trim();
+    if (!host || host.length > 253 || /\s/.test(host)) throw new Error("Enter a valid server host/IP");
+    if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Port must be 1-65535");
     if (!/^[A-Za-z0-9_]{3,16}$/.test(username)) throw new Error("Username must be 3-16 letters, numbers, or underscores");
     if (!["offline", "microsoft"].includes(type)) throw new Error("type must be offline or microsoft");
     const profiles = database.kvGet("dynamic_profiles", []);
@@ -38,11 +43,13 @@ function apiRoutes() {
     const idBase = username.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
     let id = idBase, n = 2;
     while (state.instances.has(id) || list.some((p) => p.id === id)) id = `${idBase}_${n++}`;
-    const profile = { id, username, type, enabled: true, autoStart: false, createdAt: Date.now() };
+    const aa = req.body?.autoAuth || {};
+    const autoAuth = { enabled: !!(aa.enabled ?? req.body?.autoAuthEnabled), password: String(aa.password ?? req.body?.autoAuthPassword ?? ""), registerCommand: String(aa.registerCommand || req.body?.registerCommand || "/register {password} {password}"), loginCommand: String(aa.loginCommand || req.body?.loginCommand || "/login {password}") };
+    const profile = { id, username, type, host, port, version, autoAuth, enabled: true, autoStart: !!req.body?.autoStart, createdAt: Date.now() };
     list.push(profile); database.kvSet("dynamic_profiles", list); config.accounts.push(profile);
     state.instances.set(id, new BotInstance(profile, config));
     state.services.socket?.broadcastInstances();
-    res.status(201).json({ ok: true, profile: { id, username, type, autoStart: false } });
+    res.status(201).json({ ok: true, profile: { id, username, type, host, port, version, autoStart: profile.autoStart, autoAuth: !!autoAuth.enabled } });
   }));
   r.delete("/api/profiles/:id", wrap(async (req, res) => {
     const id = String(req.params.id || ""), profiles = database.kvGet("dynamic_profiles", []);
@@ -62,16 +69,17 @@ function apiRoutes() {
     const profile = list.find(p => p.id === id);
     if (!profile) { const e = new Error("Profile not found or it is not dashboard-created"); e.status = 404; throw e; }
     if (req.body?.autoStart !== undefined && typeof req.body.autoStart !== "boolean") throw new Error("autoStart must be true or false");
-    if (req.body?.type !== undefined) {
-      const type = String(req.body.type).toLowerCase();
-      if (!["offline", "microsoft"].includes(type)) throw new Error("type must be offline or microsoft");
-      profile.type = type;
-    }
+    if (req.body?.type !== undefined) { const type = String(req.body.type).toLowerCase(); if (!["offline", "microsoft"].includes(type)) throw new Error("type must be offline or microsoft"); profile.type = type; }
+    if (req.body?.host !== undefined) { const host = String(req.body.host).trim(); if (!host || host.length > 253 || /\s/.test(host)) throw new Error("Enter a valid server host/IP"); profile.host = host; }
+    if (req.body?.port !== undefined) { const port = Number(req.body.port); if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Port must be 1-65535"); profile.port = port; }
+    if (req.body?.version !== undefined) profile.version = String(req.body.version || "auto").trim();
+    if (req.body?.autoAuth !== undefined || req.body?.autoAuthEnabled !== undefined) { const a = req.body.autoAuth || {}; profile.autoAuth = { enabled: !!(a.enabled ?? req.body.autoAuthEnabled), password: String(a.password ?? req.body.autoAuthPassword ?? profile.autoAuth?.password ?? ""), registerCommand: String(a.registerCommand || req.body.registerCommand || "/register {password} {password}"), loginCommand: String(a.loginCommand || req.body.loginCommand || "/login {password}") }; }
     if (req.body?.autoStart !== undefined) profile.autoStart = req.body.autoStart;
     database.kvSet("dynamic_profiles", list);
     const acc = config.accounts.find(a => a.id === id);
-    if (acc) { if (profile.type) acc.type = profile.type; if (profile.autoStart !== undefined) acc.autoStart = profile.autoStart; }
-    res.json({ ok: true, profile: { id: profile.id, username: profile.username, type: profile.type || "offline", autoStart: profile.autoStart !== false } });
+    if (acc) Object.assign(acc, { type: profile.type, host: profile.host, port: profile.port, version: profile.version, autoAuth: profile.autoAuth, autoStart: profile.autoStart });
+    const inst = state.instances.get(id); if (inst) { inst.account = acc || profile; inst.config = { ...inst.config, server: { ...inst.config.server, host: profile.host || config.server.host, port: Number(profile.port) || config.server.port, version: profile.version || config.server.version }, auto_auth: profile.autoAuth ? { enabled: !!profile.autoAuth.enabled, password: profile.autoAuth.password, register_command: profile.autoAuth.registerCommand, login_command: profile.autoAuth.loginCommand } : config.auto_auth }; }
+    res.json({ ok: true, profile: { id: profile.id, username: profile.username, type: profile.type || "offline", host: profile.host || config.server.host, port: Number(profile.port) || config.server.port, version: profile.version || "auto", autoStart: !!profile.autoStart, autoAuth: !!profile.autoAuth?.enabled } });
   }));
 
   r.get("/api/diagnostics", wrap((_req, res) => {
