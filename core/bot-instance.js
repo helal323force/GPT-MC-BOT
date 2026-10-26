@@ -34,7 +34,7 @@ class BotInstance extends EventEmitter {
     this.setMaxListeners(50);
     this.id = account.id;
     this.account = account;
-    this.config = config;
+    this.config = { ...config, server: { ...config.server, host: account.host || config.server.host, port: Number(account.port) || config.server.port, version: account.version || config.server.version }, auto_auth: account.autoAuth ? { enabled: !!account.autoAuth.enabled, password: account.autoAuth.password || account.password, register_command: account.autoAuth.registerCommand || "/register {password} {password}", login_command: account.autoAuth.loginCommand || "/login {password}" } : config.auto_auth };
     this.bot = null;
     this.mcData = null;
     this.movements = null;
